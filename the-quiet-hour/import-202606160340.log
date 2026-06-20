@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>The Quiet Hours — Structure Ledger</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Spline+Sans:wght@400;500;600&family=Spline+Sans+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --night:#15181e;
+    --night-2:#1c2027;
+    --night-rule:#2c313b;
+    --paper:#efe9dd;
+    --paper-2:#e7e0d1;
+    --paper-rule:#d6ccb8;
+    --ink:#23272f;
+    --ink-soft:#6a6354;
+    --ink-faint:#938b78;
+    --jae:#6f89a3;       /* cool — the dry channel */
+    --doyun:#c99257;     /* warm — the lush channel */
+    --glow:#d8b070;      /* the one lit thing for a block */
+
+    --A:#c77b8b; --B:#7e8ca6; --C:#c58fb8; --D:#6fa1a6; --E:#b5894e;
+    --F:#c77f55; --G:#9aa66b; --H:#8e6fb0; --K:#b56a4e; --L:#6e97c2; --X:#9e5560;
+  }
+  *{box-sizing:border-box;}
+  html{-webkit-text-size-adjust:100%;}
+  body{
+    margin:0;background:var(--paper);color:var(--ink);
+    font-family:"Spline Sans",system-ui,sans-serif;
+    font-size:16px;line-height:1.5;
+  }
+  ::selection{background:var(--glow);color:var(--night);}
+
+  /* ——— NIGHT BAND (hero + weave) ——— */
+  .night{
+    background:var(--night);color:#cfd4dd;
+    background-image:radial-gradient(120% 80% at 80% -10%, rgba(216,176,112,.10), transparent 60%);
+    border-bottom:1px solid var(--night-rule);
+  }
+  .wrap{max-width:1080px;margin:0 auto;padding:0 22px;}
+  .hero{padding:42px 0 26px;}
+  .eyebrow{
+    font-family:"Spline Sans Mono",monospace;font-size:11px;letter-spacing:.22em;
+    text-transform:uppercase;color:var(--glow);margin:0 0 14px;
+  }
+  h1{
+    font-family:"Fraunces",serif;font-weight:500;font-optical-sizing:auto;
+    font-size:clamp(38px,7vw,68px);line-height:.98;letter-spacing:-.01em;
+    margin:0;color:#f1ece2;
+  }
+  h1 em{font-style:italic;font-weight:400;color:var(--glow);}
+  .sub{
+    margin:16px 0 0;color:#9aa1ad;max-width:54ch;font-size:15px;
+  }
+  .meta{
+    display:flex;flex-wrap:wrap;gap:8px 10px;margin-top:20px;
+    font-family:"Spline Sans Mono",monospace;font-size:11.5px;
+  }
+  .meta b{
+    background:var(--night-2);border:1px solid var(--night-rule);
+    padding:5px 10px;border-radius:2px;font-weight:500;color:#c3c9d3;letter-spacing:.03em;
+  }
+  .meta b span{color:var(--glow);}
+
+  /* ——— WEAVE STRIP ——— */
+  .weave{padding:6px 0 34px;}
+  .weave-head{display:flex;align-items:baseline;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-bottom:10px;}
+  .weave-title{font-family:"Fraunces",serif;font-size:19px;font-weight:500;color:#e7e2d8;margin:0;}
+  .weave-note{font-size:12.5px;color:#838b98;max-width:46ch;margin:0;}
+  .weave-note kbd{font-family:"Spline Sans Mono",monospace;font-size:11px;background:var(--night-2);border:1px solid var(--night-rule);border-radius:3px;padding:1px 5px;color:var(--glow);}
+  .grid-scroll{overflow-x:auto;border:1px solid var(--night-rule);border-radius:5px;background:#181b22;-webkit-overflow-scrolling:touch;}
+  .grid{border-collapse:collapse;width:max-content;min-width:100%;font-family:"Spline Sans Mono",monospace;}
+  .grid th,.grid td{padding:0;}
+  .grid thead th{
+    position:sticky;top:0;font-size:9.5px;color:#6f7785;font-weight:400;
+    height:22px;width:22px;text-align:center;background:#181b22;border-bottom:1px solid var(--night-rule);
+  }
+  .grid thead th.act-1{color:var(--jae);} .grid thead th.act-2{color:var(--glow);} .grid thead th.act-3{color:var(--doyun);}
+  .grid thead th.rowlabel{position:sticky;left:0;z-index:3;width:138px;min-width:138px;text-align:left;padding-left:12px;color:#8a92a0;letter-spacing:.04em;}
+  .trow .rowlabel{
+    position:sticky;left:0;z-index:2;width:138px;min-width:138px;background:#181b22;
+    text-align:left;padding:0 8px 0 12px;font-size:11px;color:#aab2bf;white-space:nowrap;
+    border-right:1px solid var(--night-rule);cursor:pointer;height:21px;
+    border-top:1px solid #20242c;
+  }
+  .trow .rowlabel:hover{color:#fff;}
+  .trow .rowlabel .dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:7px;vertical-align:middle;}
+  .trow.sel .rowlabel{background:#23272f;color:#fff;}
+  .cell{width:22px;height:21px;border-top:1px solid #20242c;border-left:1px solid #1f232b;position:relative;}
+  .cell .mark{position:absolute;inset:4px;border-radius:2px;background:var(--c);opacity:0;transition:opacity .15s;}
+  .cell.seed .mark{opacity:.30;}
+  .cell.live .mark{opacity:.62;}
+  .cell.major .mark{opacity:1;inset:3px;box-shadow:0 0 0 1px rgba(0,0,0,.25) inset;}
+  .cell.colcur{background:rgba(216,176,112,.08);}
+  .trow.dim .cell .mark{opacity:.12;}
+  .trow.dim .rowlabel{opacity:.5;}
+
+  /* ——— FILTER BAR ——— */
+  .controls{background:var(--paper-2);border-bottom:1px solid var(--paper-rule);position:sticky;top:0;z-index:20;}
+  .controls .wrap{display:flex;flex-wrap:wrap;align-items:center;gap:14px 20px;padding:13px 22px;}
+  .fgroup{display:flex;align-items:center;gap:8px;}
+  .flabel{font-family:"Spline Sans Mono",monospace;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft);}
+  .seg{display:inline-flex;border:1px solid var(--paper-rule);border-radius:4px;overflow:hidden;background:var(--paper);}
+  .seg button{
+    border:0;background:transparent;font:inherit;font-size:13px;padding:6px 11px;color:var(--ink-soft);
+    cursor:pointer;border-left:1px solid var(--paper-rule);
+  }
+  .seg button:first-child{border-left:0;}
+  .seg button[aria-pressed="true"]{background:var(--ink);color:var(--paper);}
+  .seg button.jae[aria-pressed="true"]{background:var(--jae);color:#fff;}
+  .seg button.doyun[aria-pressed="true"]{background:var(--doyun);color:#2a2114;}
+  .search{flex:1 1 200px;min-width:160px;display:flex;align-items:center;gap:8px;
+    border:1px solid var(--paper-rule);border-radius:4px;background:var(--paper);padding:0 11px;}
+  .search input{border:0;background:transparent;font:inherit;font-size:14px;padding:8px 0;width:100%;color:var(--ink);outline:none;}
+  .search svg{flex:none;color:var(--ink-faint);}
+  .clearall{margin-left:auto;border:0;background:transparent;font:inherit;font-size:13px;color:var(--ink-soft);
+    cursor:pointer;text-decoration:underline;text-underline-offset:3px;padding:6px 2px;}
+  .clearall:hover{color:var(--ink);}
+  .count{font-family:"Spline Sans Mono",monospace;font-size:12px;color:var(--ink-faint);white-space:nowrap;}
+
+  /* ——— LEDGER ——— */
+  .ledger{padding:30px 0 70px;}
+  .act{margin-top:34px;}
+  .act:first-child{margin-top:6px;}
+  .act-head{display:flex;align-items:baseline;gap:14px;border-bottom:2px solid var(--ink);padding-bottom:8px;margin-bottom:4px;}
+  .act-num{font-family:"Spline Sans Mono",monospace;font-size:12px;letter-spacing:.1em;color:var(--ink-soft);}
+  .act-name{font-family:"Fraunces",serif;font-size:clamp(22px,3.4vw,30px);font-weight:500;margin:0;line-height:1.05;}
+  .act-range{font-family:"Spline Sans Mono",monospace;font-size:12px;color:var(--ink-faint);margin-left:auto;white-space:nowrap;}
+  .act-gloss{font-size:14px;color:var(--ink-soft);margin:10px 0 18px;max-width:70ch;}
+
+  .row{
+    border:1px solid var(--paper-rule);border-radius:6px;background:#f5f1e8;margin:9px 0;overflow:hidden;
+    border-left:4px solid var(--povc);transition:opacity .15s, box-shadow .15s;
+  }
+  .row.hidden{display:none;}
+  .row summary{
+    list-style:none;cursor:pointer;display:grid;
+    grid-template-columns:54px 1fr auto;align-items:center;gap:14px;padding:13px 16px;
+  }
+  .row summary::-webkit-details-marker{display:none;}
+  .chno{font-family:"Spline Sans Mono",monospace;font-size:13px;color:var(--ink-faint);text-align:right;}
+  .chno b{display:block;font-size:21px;font-weight:500;color:var(--ink);line-height:1;}
+  .chmid{min-width:0;}
+  .povtag{font-family:"Spline Sans Mono",monospace;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--povc);font-weight:500;}
+  .chtitle{font-family:"Fraunces",serif;font-size:17px;font-weight:500;margin:1px 0 2px;color:var(--ink);}
+  .chline{font-size:13.5px;color:var(--ink-soft);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .row[open] .chline{white-space:normal;}
+  .rt{display:flex;align-items:center;gap:9px;}
+  .status{font-family:"Spline Sans Mono",monospace;font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;padding:3px 7px;border-radius:20px;white-space:nowrap;}
+  .status.drafted{background:rgba(111,137,163,.16);color:#4c647c;}
+  .status.outline{background:rgba(201,146,87,.18);color:#9a6a2c;}
+  .chev{color:var(--ink-faint);transition:transform .2s;flex:none;}
+  .row[open] .chev{transform:rotate(90deg);}
+
+  .body{padding:2px 16px 18px 16px;border-top:1px dashed var(--paper-rule);margin:0 0 0;}
+  .body .field{margin:14px 0 0;}
+  .body .field:first-child{margin-top:12px;}
+  .ftitle{font-family:"Spline Sans Mono",monospace;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-faint);margin:0 0 6px;}
+  .plot{font-size:15px;line-height:1.55;color:var(--ink);margin:0;}
+  .newbeat{margin-top:10px;font-size:14px;line-height:1.5;color:#7a5a2a;background:rgba(201,146,87,.10);border-left:3px solid var(--doyun);padding:8px 11px;border-radius:0 4px 4px 0;}
+  .newbeat b{font-weight:600;}
+  .chips{display:flex;flex-wrap:wrap;gap:6px;}
+  .chip{font-size:12.5px;padding:4px 10px;border-radius:20px;border:1px solid var(--paper-rule);background:var(--paper);color:var(--ink-soft);cursor:pointer;}
+  .chip .sw{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;vertical-align:middle;background:var(--c);}
+  .chip.major{font-weight:600;color:var(--ink);border-color:var(--ink-faint);}
+  .chip.cast{cursor:pointer;}
+  .chip:hover{border-color:var(--ink);color:var(--ink);}
+  .chip[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink);}
+
+  .empty{text-align:center;padding:60px 20px;color:var(--ink-soft);}
+  .empty b{font-family:"Fraunces",serif;font-size:22px;display:block;margin-bottom:6px;color:var(--ink);font-weight:500;}
+  .empty button{margin-top:14px;border:1px solid var(--ink);background:transparent;font:inherit;padding:8px 16px;border-radius:4px;cursor:pointer;color:var(--ink);}
+
+  footer{border-top:1px solid var(--paper-rule);padding:22px 0 40px;color:var(--ink-faint);font-size:12.5px;}
+  footer .wrap{display:flex;flex-wrap:wrap;gap:6px 18px;}
+  footer code{font-family:"Spline Sans Mono",monospace;color:var(--ink-soft);}
+
+  @media (max-width:560px){
+    .row summary{grid-template-columns:44px 1fr auto;gap:10px;padding:12px 13px;}
+    .chno b{font-size:18px;}
+    .controls .wrap{gap:10px 14px;}
+    .act-range{width:100%;margin-left:0;}
+    .hero{padding:34px 0 22px;}
+  }
+  @media (prefers-reduced-motion:reduce){*{transition:none!important;}}
+  :focus-visible{outline:2px solid var(--glow);outline-offset:2px;border-radius:3px;}
+</style>
+</head>
+<body>
+
+<header class="night">
+  <div class="wrap hero">
+    <p class="eyebrow">Book 1 · Structure Ledger</p>
+    <h1>The&nbsp;Quiet&nbsp;<em>Hours</em></h1>
+    <p class="sub">The whole shape on one page — three acts, thirty-two chapters, every plot and subplot tracked the way the book tracks everything else: as a ledger that has to balance.</p>
+    <div class="meta">
+      <b><span>3</span> acts</b>
+      <b><span>32</span> chapters</b>
+      <b>Act&nbsp;I&nbsp;<span>1–19</span></b>
+      <b>Act&nbsp;II&nbsp;<span>20–30</span></b>
+      <b>Act&nbsp;III&nbsp;<span>31–32</span></b>
+      <b>drafted&nbsp;<span>1–24</span></b>
+    </div>
+  </div>
+
+  <div class="wrap weave">
+    <div class="weave-head">
+      <h2 class="weave-title">The thread ledger</h2>
+      <p class="weave-note">Each column is a chapter, each row a thread. Solid = a major beat, faint = a seed, blank = the thread's gone quiet. Tap a row to read only its chapters. <kbd>↔</kbd> scroll</p>
+    </div>
+    <div class="grid-scroll">
+      <table class="grid" id="grid"><thead></thead><tbody></tbody></table>
+    </div>
+  </div>
+</header>
+
+<div class="controls">
+  <div class="wrap">
+    <div class="fgroup">
+      <span class="flabel">Act</span>
+      <div class="seg" id="seg-act">
+        <button data-act="all" aria-pressed="true">All</button>
+        <button data-act="1">I</button>
+        <button data-act="2">II</button>
+        <button data-act="3">III</button>
+      </div>
+    </div>
+    <div class="fgroup">
+      <span class="flabel">POV</span>
+      <div class="seg" id="seg-pov">
+        <button data-pov="all" aria-pressed="true">Both</button>
+        <button class="jae" data-pov="Jae">Jae</button>
+        <button class="doyun" data-pov="Do-yun">Do-yun</button>
+      </div>
+    </div>
+    <div class="fgroup">
+      <span class="flabel">Status</span>
+      <div class="seg" id="seg-status">
+        <button data-status="all" aria-pressed="true">All</button>
+        <button data-status="drafted">Drafted</button>
+        <button data-status="outline">Outline</button>
+      </div>
+    </div>
+    <label class="search">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+      <input id="search" type="search" placeholder="Find a chapter, cast member, or beat" aria-label="Search chapters" />
+    </label>
+    <button class="clearall" id="clearall">Clear</button>
+    <span class="count" id="count"></span>
+  </div>
+</div>
+
+<main class="wrap ledger" id="ledger"></main>
+
+<footer>
+  <div class="wrap">
+    <span>Act cuts are a structural read, not a canon lock.</span>
+    <span>Beats marked <code>NEW</code> aren't yet rippled into the docs.</span>
+    <span><code>9-balcony</code> retired; recognition folded into Ch17.</span>
+  </div>
+</footer>
+
+<script>
+const THREADS = [
+  {c:'A', name:'Romance (spine)'},
+  {c:'B', name:'The machines'},
+  {c:'C', name:'Yuna × Hyun'},
+  {c:'D', name:'Hyun'},
+  {c:'E', name:'Director Oh'},
+  {c:'F', name:'Jeong galbi house'},
+  {c:'G', name:'Name / orphan (在宇)'},
+  {c:'H', name:'Heir / Daon'},
+  {c:'K', name:'Label'},
+  {c:'L', name:'Songs'},
+  {c:'X', name:'The ex (Ji-hwan)'},
+];
+const TNAME = Object.fromEntries(THREADS.map(t=>[t.c,t.name]));
+
+// intensity: 2 = major beat, 1 = present, 0.5 = seed
+const CH = [
+  {n:1,pov:'Jae',act:1,title:'The Register Always Balances',drafted:true,
+   plot:'Origin, three years back: the graveyard shift, the leaking roof, the wrecked stranger she comps a hot coffee. The grey eyes, the imprint she can\u2019t file.',
+   th:{A:2,G:.5,L:.5}, cast:['Jae','Do-yun (stranger)','the two drunks','the morning girl']},
+  {n:2,pov:'Do-yun',act:1,drafted:true,
+   plot:'Present day: vocal rest, the diner where he re-finds her, and the party where he broke his hand. The machine that uses him established.',
+   th:{A:1,B:2,D:1,L:2}, cast:['Do-yun','Hyun']},
+  {n:3,pov:'Jae',act:1,drafted:true,
+   plot:'The collision from her side: a sight-unseen sublet, the towel, the house rules, the flat \u201cOkay\u201d that lets him stay.',
+   th:{A:2,E:.5}, cast:['Jae','Do-yun']},
+  {n:4,pov:'Do-yun',act:1,drafted:true,
+   plot:'His side of the collision: he reads her whole life off the flat in minutes and refuses to vanish her the way his world vanishes people.',
+   th:{A:2,B:.5}, cast:['Do-yun','Jae','Hyun']},
+  {n:5,pov:'Jae',act:1,drafted:true,
+   plot:'First morning. The shimmed table, the running spy-theory tally, the way her counting falls apart when he\u2019s near.',
+   th:{A:1,G:.5,L:1}, cast:['Jae','Do-yun']},
+  {n:6,pov:'Do-yun',act:1,drafted:true,
+   plot:'The atelier; the mother; the 14th is set. Panic, then the phone-off flight into the rain. The KAIROS group text is seeded.',
+   th:{A:1,B:2,C:.5,D:1,F:.5,L:1}, cast:['Do-yun','the mother','Ahn (tailor)','Hyun']},
+  {n:7,pov:'Jae',act:1,drafted:true,
+   plot:'The rice lesson; \u201ca door that locks\u201d; the cash-misfire wound that shows what charity costs her. Exam \u2248 9 days out.',
+   th:{A:2,G:1}, cast:['Jae','Do-yun']},
+  {n:8,pov:'Do-yun',act:1,drafted:true,
+   plot:'The market: her competence on display, a near-recognition he can\u2019t place. Reo\u2019s failing books are seeded.',
+   th:{A:1,B:1,F:.5}, cast:['Do-yun','Jae','Pak (market)','Reo (seeded)']},
+  {n:9,pov:'Jae',act:1,drafted:true,
+   plot:'Director Oh\u2019s warehouse threat and the skim he wants her to sign off on; Han-byeol\u2019s call from Vancouver.',
+   th:{E:2,D:1}, cast:['Jae','Director Oh','Mr. Goo','Han-byeol (call)']},
+  {n:10,pov:'Do-yun',act:1,drafted:true,
+   plot:'Yuna in person \u2014 the reluctant ally, not a rival. Min-gyu is seeded as the jilted obstacle.',
+   th:{A:1,B:1,C:.5,F:1}, cast:['Do-yun','Yuna','Hyun','Min-gyu (seeded)']},
+  {n:11,pov:'Jae',act:1,drafted:true,
+   plot:'The banquet: the stakes of namelessness, the refusal of Oh, her first \u201cunfinished yes.\u201d The load-bearing party-rhyme.',
+   th:{A:2,E:1}, cast:['Jae','Director Oh']},
+  {n:12,pov:'Do-yun',act:1,drafted:true,
+   plot:'The rent-fix pitch leads to the Jeong galbi house; the couple-cover; the radiator burst and the first near-kiss.',
+   th:{A:1,F:2}, cast:['Do-yun','Jae','Reo','Eomma','the Jeongs','Min-ji']},
+  {n:13,pov:'Jae',act:1,title:'Always Correct the Record',drafted:true,
+   plot:'Chapter 12 from her interiority: the throttle on the near-kiss is hers; the blanket she half-wakes to and lets stay.',
+   th:{A:2}, cast:['Jae','Do-yun']},
+  {n:14,pov:'Do-yun',act:1,drafted:true,
+   plot:'Director Oh off-ramp; the Thursday-filing aftermath; the exam clock; a hairline Yuna foreshadow.',
+   th:{A:1,E:1,C:.5}, cast:['Do-yun','Jae','Yuna (cutaway)','Hyun']},
+  {n:15,pov:'Jae',act:1,drafted:true,
+   plot:'Director Oh calls \u2014 \u201cwhich is how she knows it\u2019s bad.\u201d The Oh thread closes out.',
+   th:{A:1,E:1}, cast:['Jae','Director Oh','Do-yun']},
+  {n:16,pov:'Do-yun',act:1,drafted:true,
+   plot:'\u201cShe makes him watch.\u201d The domestic-intimacy step \u2014 proximity going quietly tender.',
+   th:{A:1,F:1}, cast:['Do-yun','Jae']},
+  {n:17,pov:'Jae',act:1,drafted:true,
+   plot:'The runway: exam clock, the ex (Ji-hwan) walking back in, the 14th looming \u2014 and she hears \u201cUnder\u201d through the wall.',
+   th:{A:1,E:.5,L:1,X:.5}, cast:['Jae','Ji-hwan','Do-yun (through the wall)']},
+  {n:18,pov:'Do-yun',act:1,drafted:true,
+   plot:'The machine tightening; the label\u2194mother crack; the open-window take that becomes the leak; Hyun fraying.',
+   th:{B:2,C:1,D:2,L:1}, cast:['Do-yun','the mother','Noh (label)','Hyun','Yuna','Min-gyu']},
+  {n:19,pov:'Jae',act:1,drafted:true,
+   plot:'Exam eve into Day-Zero; the ex escalates; the world tilts; the seam into the clip.',
+   th:{A:1,X:1}, cast:['Jae','Ji-hwan','Do-yun']},
+
+  {n:20,pov:'Do-yun',act:2,drafted:true,
+   plot:'The clip detonates; label-vs-mother fracture; the leverage turn \u2014 the first time he wields the machine instead of being used by it. The song is nearly whole.',
+   th:{B:2,K:.5,L:2}, cast:['Do-yun','Hyun','Noh','the mother','KAIROS','Reo']},
+  {n:21,pov:'Do-yun',act:2,drafted:true,
+   plot:'The band finds him; Reo connects accountant-Jae to roommate-Jae; the freeze.',
+   th:{A:1,D:2,F:1}, cast:['Do-yun','Reo','Tae','Sun','Yejun','Hyun']},
+  {n:22,pov:'Jae',act:2,drafted:true,
+   plot:'Exposure at the Jeong restaurant: the idol reveal, and the overlooked betrayal lands. The first trough.',
+   th:{A:2,F:2,G:1}, cast:['Jae','Do-yun','Reo','Eomma / the Jeongs','KAIROS']},
+  {n:23,pov:'Do-yun',act:2,drafted:true,
+   plot:'Fallout. The label\u2019s predatory turn goes live \u2014 the blacklist threat \u2014 and he wields the leverage back.',
+   th:{B:2,D:1,K:2}, cast:['Do-yun','Noh','Hyun','the mother']},
+  {n:24,pov:'Jae',act:2,title:'Last to Know, First to Leave',drafted:true,
+   plot:'Last to know. The ex outs her \u2014 sells the photo for his own debt \u2014 and the world closes in. She gives the lock back at dawn.',
+   th:{A:1,G:1,X:2}, cast:['Jae','Ji-hwan','Do-yun'],
+   newbeat:'<b>NEW \u00b7 ~Ch24\u201326 seam:</b> the drunk near-kiss \u2014 she leans in, <i>he</i> freaks (the trained surface short-circuits on real contact), she audits it away by morning. Burn stays intact.'},
+  {n:25,pov:'Jae',act:2,drafted:false,
+   plot:'The close-call \u2014 the ex inside the idol-world chaos \u2014 puts her in the hospital. Donor consent and the blood draw plant the heir seed. The Yuna\u21c4Jae alliance begins, as a problem to solve.',
+   th:{A:1,H:.5,X:2}, cast:['Jae','Ji-hwan','hospital staff','Yuna']},
+  {n:26,pov:'Do-yun',act:2,drafted:false,
+   plot:'The hospital from his barred side: frantic, the wall back between them, Yuna helping where he can\u2019t \u2014 and he misses the reveal entirely.',
+   th:{A:2,B:1,C:1,D:1}, cast:['Do-yun','Hyun','Yuna','(Jae, barred)']},
+  {n:27,pov:'Jae',act:2,drafted:false,
+   plot:'The DNA match; the grandmother \u2014 the twenty-year searcher \u2014 live in the room; the heir reveal. The same stretch, she passes the exam: her door, on her own merit.',
+   th:{G:2,H:2}, cast:['Jae','Madam Kang Mae-hwa','the doctor','Do-yun']},
+  {n:28,pov:'Jae',act:2,drafted:false,
+   plot:'The situation now needs a marriage, and she has to ask him \u2014 the hardest thing her character can do. The interior beat breathes.',
+   th:{A:2,B:1,H:1}, cast:['Jae','Do-yun'],
+   newbeat:'<b>NEW:</b> the real first kiss \u2014 sober, chosen, no soju to blame it on. The accident at Ch24 becomes the choice here.'},
+  {n:29,pov:'Do-yun',act:2,drafted:false,
+   plot:'He agrees; the registered contract marriage; the merger dies, Yuna is freed and chooses Hyun \u2014 the never-picked man, picked.',
+   th:{A:2,B:2,C:2,D:2}, cast:['Do-yun','Jae','Yuna','Hyun','Min-gyu (loses her)','the mother']},
+  {n:30,pov:'Jae',act:2,drafted:false,
+   plot:'The party erasure surfaces \u2014 \u201cI bought you twice\u201d \u2014 and the mother weaponizes it. Every identity collapses into Jae at once. The dark moment, the deeper trough.',
+   th:{A:2,B:2,G:2}, cast:['Jae','the mother','Do-yun'],
+   newbeat:'<b>NEW \u00b7 guard release:</b> the wall finally fails \u2014 \u201che\u2019s always warm; maybe I could keep some of that.\u201d'},
+
+  {n:31,pov:'Do-yun',act:3,drafted:false,
+   plot:'He refuses to keep her hidden; defies the mother; claims her in the open. The third door \u2014 not the gilded cage, not the dorm: a place that\u2019s theirs.',
+   th:{A:2,B:2}, cast:['Do-yun','the mother','Jae','the board (offstage)']},
+  {n:32,pov:'Jae',act:3,drafted:false,
+   plot:'She chooses him in the light. The name and the place (在宇). \u201cUnder\u201d finally lifts \u2014 indoors, with her. The father reunion, one scene. HEA.',
+   th:{A:2,G:2,H:2,L:2}, cast:['Jae','Do-yun','the father','grandmother'],
+   newbeat:'<b>NEW:</b> the physical unlock \u2014 wall down, rendered to the book\u2019s fade-friendly ceiling.'},
+];
+
+const ACTS = {
+  1:{name:'Accidental Roommates', range:'Ch 1\u201319', gloss:'The hideaway, the collision, the wall. The slow burn established and the clocks \u2014 her exam, the 14th \u2014 set ticking. Ends on the eve of the Unraveling.'},
+  2:{name:'Secret Contract Marriage', range:'Ch 20\u201330', gloss:'The Unraveling, the heir crisis, the marriage, the bomb. Proximity turns social, legal, and domestic all at once \u2014 the false dawn of the wedding bracketed by two troughs.'},
+  3:{name:'Chosen in the Light', range:'Ch 31\u201332', gloss:'He tears up the secrecy, claims her in the open; she chooses back. Every wound \u2014 used, erased, never-picked \u2014 healed in the same room.'},
+};
+
+const POVC = {'Jae':'var(--jae)','Do-yun':'var(--doyun)'};
+
+/* ---------- build weave strip ---------- */
+const grid = document.getElementById('grid');
+const thead = grid.querySelector('thead');
+const tbody = grid.querySelector('tbody');
+
+let htr = '<tr><th class="rowlabel">thread \\ ch</th>';
+CH.forEach(c=>{ htr += `<th class="act-${c.act}" data-ch="${c.n}">${c.n}</th>`; });
+htr += '</tr>';
+thead.innerHTML = htr;
+
+THREADS.forEach(t=>{
+  let r = `<tr class="trow" data-thread="${t.c}"><td class="rowlabel" tabindex="0" role="button"><span class="dot" style="background:var(--${t.c})"></span>${t.name}</td>`;
+  CH.forEach(c=>{
+    const v = c.th[t.c]||0;
+    const cls = v===2?'major':v===1?'live':v===.5?'seed':'';
+    r += `<td class="cell ${cls}" data-ch="${c.n}" title="Ch ${c.n} · ${t.name}"><span class="mark" style="--c:var(--${t.c})"></span></td>`;
+  });
+  r += '</tr>';
+  tbody.insertAdjacentHTML('beforeend', r);
+});
+
+/* ---------- build ledger ---------- */
+const ledger = document.getElementById('ledger');
+[1,2,3].forEach(a=>{
+  const sec = document.createElement('section');
+  sec.className='act'; sec.dataset.act=a;
+  sec.innerHTML = `<div class="act-head">
+      <span class="act-num">ACT ${a===1?'I':a===2?'II':'III'}</span>
+      <h2 class="act-name">${ACTS[a].name}</h2>
+      <span class="act-range">${ACTS[a].range}</span>
+    </div>
+    <p class="act-gloss">${ACTS[a].gloss}</p>`;
+  CH.filter(c=>c.act===a).forEach(c=>{
+    const d = document.createElement('details');
+    d.className='row'; d.dataset.ch=c.n; d.dataset.pov=c.pov; d.dataset.act=c.act;
+    d.dataset.status = c.drafted?'drafted':'outline';
+    d.style.setProperty('--povc', POVC[c.pov]);
+    const threadChips = Object.entries(c.th).sort((a,b)=>b[1]-a[1]).map(([code,v])=>
+      `<button class="chip ${v===2?'major':''}" data-thread="${code}"><span class="sw" style="--c:var(--${code})"></span>${TNAME[code]}</button>`
+    ).join('');
+    const castChips = c.cast.map(n=>`<button class="chip cast" data-cast="${n.replace(/"/g,'')}">${n}</button>`).join('');
+    d.innerHTML = `
+      <summary>
+        <span class="chno">ch<b>${c.n}</b></span>
+        <span class="chmid">
+          <span class="povtag">${c.pov}</span>
+          ${c.title?`<div class="chtitle">${c.title}</div>`:''}
+          <div class="chline">${c.plot}</div>
+        </span>
+        <span class="rt">
+          <span class="status ${c.drafted?'drafted':'outline'}">${c.drafted?'drafted':'outline'}</span>
+          <svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
+        </span>
+      </summary>
+      <div class="body">
+        <div class="field"><p class="ftitle">Plot</p><p class="plot">${c.plot}</p>
+          ${c.newbeat?`<div class="newbeat">${c.newbeat}</div>`:''}
+        </div>
+        <div class="field"><p class="ftitle">Subplots in play</p><div class="chips">${threadChips}</div></div>
+        <div class="field"><p class="ftitle">On the page</p><div class="chips">${castChips}</div></div>
+      </div>`;
+    sec.appendChild(d);
+  });
+  ledger.appendChild(sec);
+});
+
+/* ---------- filtering ---------- */
+const state = {act:'all', pov:'all', status:'all', thread:null, cast:null, q:''};
+const rows = [...document.querySelectorAll('.row')];
+const countEl = document.getElementById('count');
+
+function apply(){
+  let shown=0;
+  rows.forEach(r=>{
+    const c = CH.find(x=>x.n==r.dataset.ch);
+    let ok = true;
+    if(state.act!=='all' && r.dataset.act!==state.act) ok=false;
+    if(state.pov!=='all' && r.dataset.pov!==state.pov) ok=false;
+    if(state.status!=='all' && r.dataset.status!==state.status) ok=false;
+    if(state.thread && !(c.th[state.thread])) ok=false;
+    if(state.cast && !c.cast.some(n=>n.replace(/"/g,'')===state.cast)) ok=false;
+    if(state.q){
+      const hay = (c.n+' '+c.pov+' '+(c.title||'')+' '+c.plot+' '+c.cast.join(' ')+' '+Object.keys(c.th).map(k=>TNAME[k]).join(' ')).toLowerCase();
+      if(!hay.includes(state.q)) ok=false;
+    }
+    r.classList.toggle('hidden', !ok);
+    if(ok) shown++;
+  });
+  // act sections hide when empty
+  document.querySelectorAll('.act').forEach(sec=>{
+    const any = [...sec.querySelectorAll('.row')].some(r=>!r.classList.contains('hidden'));
+    sec.style.display = any?'':'none';
+  });
+  // weave row selection
+  document.querySelectorAll('.trow').forEach(tr=>{
+    tr.classList.toggle('sel', tr.dataset.thread===state.thread);
+    tr.classList.toggle('dim', state.thread && tr.dataset.thread!==state.thread);
+  });
+  // thread chips pressed state
+  document.querySelectorAll('.chip[data-thread]').forEach(ch=>ch.setAttribute('aria-pressed', ch.dataset.thread===state.thread));
+  document.querySelectorAll('.chip[data-cast]').forEach(ch=>ch.setAttribute('aria-pressed', ch.dataset.cast===state.cast));
+
+  countEl.textContent = shown===32 ? 'all 32 chapters' : `${shown} of 32`;
+  renderEmpty(shown);
+}
+
+let emptyEl=null;
+function renderEmpty(shown){
+  if(shown===0 && !emptyEl){
+    emptyEl=document.createElement('div');
+    emptyEl.className='empty';
+    emptyEl.innerHTML='<b>Nothing balances to that.</b>No chapters match the current filters.<br><button id="reset2">Clear filters</button>';
+    ledger.appendChild(emptyEl);
+    emptyEl.querySelector('#reset2').onclick=clearAll;
+  } else if(shown>0 && emptyEl){ emptyEl.remove(); emptyEl=null; }
+}
+
+function seg(id, key){
+  document.getElementById(id).addEventListener('click', e=>{
+    const b=e.target.closest('button'); if(!b)return;
+    state[key]=b.dataset[key==='status'?'status':key];
+    [...e.currentTarget.children].forEach(x=>x.setAttribute('aria-pressed', x===b));
+    apply();
+  });
+}
+seg('seg-act','act'); seg('seg-pov','pov'); seg('seg-status','status');
+
+document.getElementById('search').addEventListener('input', e=>{ state.q=e.target.value.trim().toLowerCase(); apply(); });
+
+// weave row click -> thread filter (toggle)
+document.querySelectorAll('.trow .rowlabel').forEach(lab=>{
+  const fn=()=>{ const t=lab.closest('.trow').dataset.thread; state.thread = state.thread===t?null:t; apply();
+    document.getElementById('ledger').scrollIntoView({behavior:'smooth',block:'start'}); };
+  lab.addEventListener('click',fn);
+  lab.addEventListener('keydown',e=>{ if(e.key==='Enter'||e.key===' '){e.preventDefault();fn();} });
+});
+
+// chips inside cards
+ledger.addEventListener('click', e=>{
+  const tch=e.target.closest('.chip[data-thread]');
+  const cch=e.target.closest('.chip[data-cast]');
+  if(tch){ e.preventDefault(); state.thread = state.thread===tch.dataset.thread?null:tch.dataset.thread; apply(); }
+  if(cch){ e.preventDefault(); state.cast = state.cast===cch.dataset.cast?null:cch.dataset.cast; apply(); }
+});
+
+// column hover highlight on the strip
+grid.addEventListener('mouseover', e=>{
+  const cell=e.target.closest('[data-ch]'); if(!cell)return;
+  const n=cell.dataset.ch;
+  grid.querySelectorAll('.cell').forEach(td=>td.classList.toggle('colcur', td.dataset.ch===n));
+});
+grid.addEventListener('mouseleave', ()=>grid.querySelectorAll('.cell').forEach(td=>td.classList.remove('colcur')));
+
+function clearAll(){
+  state.act='all';state.pov='all';state.status='all';state.thread=null;state.cast=null;state.q='';
+  document.getElementById('search').value='';
+  ['seg-act','seg-pov','seg-status'].forEach(id=>{
+    const seg=document.getElementById(id);
+    [...seg.children].forEach((x,i)=>x.setAttribute('aria-pressed', i===0));
+  });
+  apply();
+}
+document.getElementById('clearall').addEventListener('click', clearAll);
+
+apply();
+</script>
+</body>
+</html>
